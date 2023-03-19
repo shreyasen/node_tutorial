@@ -21,15 +21,17 @@ const server = http.createServer((req, res) => {
     });
 
     //this will be fired once it's done parsing parsing the incoming requests data
-    req.on("end", () => {
+    // return is important here, otherwise the code outside the if block will execute first,then the eventlistener function of 'end' will execute and throw error
+    return req.on("end", () => {
       const parsedBody = Buffer.concat(body).toString();
       console.log(parsedBody); // message=something here message in the left is the name attribute of the input text
       const message = parsedBody.split("=")[1];
-      fs.writeFileSync("message.txt", message);
+      fs.writeFile("message.txt", message, (err) => {
+        res.statusCode = 302;
+        res.setHeader("Location", "/");
+        return res.end();
+      });
     });
-    res.statusCode = 302;
-    res.setHeader("Location", "/");
-    return res.end();
   }
   res.write("<html>");
   res.write("<body><h3>Welcome to Node JS</h3></body>");
