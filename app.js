@@ -2,6 +2,7 @@ const fs = require("fs");
 const http = require("http");
 
 const server = http.createServer((req, res) => {
+  //this function gets executed whenever a new incoming request comes
   const url = req.url;
   const method = req.method;
   if (url === "/") {
@@ -13,7 +14,19 @@ const server = http.createServer((req, res) => {
     return res.end(); // here return is important because otherwise it will execute the code after if block and throw error as res.write is not allowed after res.end
   }
   if (url === "/message" && method === "POST") {
-    fs.writeFileSync("message.txt", "DUMMY");
+    const body = [];
+    req.on("data", (chunk) => {
+      console.log(chunk);
+      body.push(chunk);
+    });
+
+    //this will be fired once it's done parsing parsing the incoming requests data
+    req.on("end", () => {
+      const parsedBody = Buffer.concat(body).toString();
+      console.log(parsedBody); // message=something here message in the left is the name attribute of the input text
+      const message = parsedBody.split("=")[1];
+      fs.writeFileSync("message.txt", message);
+    });
     res.statusCode = 302;
     res.setHeader("Location", "/");
     return res.end();
